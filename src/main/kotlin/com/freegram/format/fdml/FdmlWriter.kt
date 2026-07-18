@@ -15,9 +15,9 @@ object FdmlWriter {
             setAttribute("version", doc.version)
             setAttribute("xmlns", "https://freegram.dev/fdml/1.0")
         }
-
         root.addContent(buildMetadata(doc))
         root.addContent(buildResources(doc))
+        root.addContent(buildLayers(doc))
         root.addContent(buildDiagram(doc))
 
         val xmlDoc = Document(root)
@@ -37,11 +37,8 @@ object FdmlWriter {
         meta.addContent(Element("backgroundColor").setText(doc.backgroundColor))
 
         val compat = Element("mermaidCompatibility").setAttribute("level", doc.mermaidCompatibility.level.name.lowercase())
-        doc.mermaidCompatibility.reasons.forEach { reason ->
-            compat.addContent(Element("incompatibleReason").setText(reason))
-        }
+        doc.mermaidCompatibility.reasons.forEach { compat.addContent(Element("incompatibleReason").setText(it)) }
         meta.addContent(compat)
-
         return meta
     }
 
@@ -50,21 +47,17 @@ object FdmlWriter {
         doc.resources.forEach { (id, resource) ->
             val el = when (resource) {
                 is EmbeddedResource.Font -> Element("font").apply {
-                    setAttribute("id", id)
-                    setAttribute("fontFamily", resource.fontFamily)
-                    setAttribute("fontWeight", resource.fontWeight)
-                    setAttribute("fontStyle", resource.fontStyle)
+                    setAttribute("id", id); setAttribute("fontFamily", resource.fontFamily)
+                    setAttribute("fontWeight", resource.fontWeight); setAttribute("fontStyle", resource.fontStyle)
                     setAttribute("mimeType", resource.mimeType)
                     setText(Base64.getEncoder().encodeToString(resource.data))
                 }
                 is EmbeddedResource.Image -> Element("image").apply {
-                    setAttribute("id", id)
-                    setAttribute("mimeType", resource.mimeType)
+                    setAttribute("id", id); setAttribute("mimeType", resource.mimeType)
                     setText(Base64.getEncoder().encodeToString(resource.data))
                 }
                 is EmbeddedResource.Raw -> Element("embed").apply {
-                    setAttribute("id", id)
-                    setAttribute("mimeType", resource.mimeType)
+                    setAttribute("id", id); setAttribute("mimeType", resource.mimeType)
                     setAttribute("description", resource.description)
                     setText(Base64.getEncoder().encodeToString(resource.data))
                 }
@@ -74,30 +67,34 @@ object FdmlWriter {
         return resources
     }
 
+    private fun buildLayers(doc: FdmlDocument): Element {
+        val layers = Element("layers")
+        doc.layers.forEach { layer ->
+            layers.addContent(Element("layer").apply {
+                setAttribute("id", layer.id); setAttribute("name", layer.name)
+                setAttribute("visible", layer.visible.toString()); setAttribute("locked", layer.locked.toString())
+                setAttribute("order", layer.order.toString())
+            })
+        }
+        return layers
+    }
+
     private fun buildDiagram(doc: FdmlDocument): Element {
         val diagram = Element("diagram").apply {
             setAttribute("width", doc.diagramWidth.toString())
             setAttribute("height", doc.diagramHeight.toString())
-            if (doc.gridEnabled) {
-                setAttribute("gridSize", doc.gridSize.toString())
-            }
         }
-        doc.elements.forEach { element ->
-            diagram.addContent(buildElement(element))
-        }
+        doc.elements.forEach { diagram.addContent(buildElement(it)) }
         return diagram
     }
 
-    @Suppress("UNCHECKED_CAST")
-    private fun buildElement(element: DiagramElement): Element {
-        return when (element) {
-            is DiagramElement.Node -> buildNode(element)
-            is DiagramElement.Edge -> buildEdge(element)
-            is DiagramElement.MermaidBlock -> buildMermaidBlock(element)
-            is DiagramElement.PdfElement -> buildPdfElement(element)
-            is DiagramElement.Text -> buildText(element)
-            is DiagramElement.Group -> buildGroup(element)
-        }
+    private fun buildElement(element: DiagramElement): Element = when (element) {
+        is DiagramElement.Node -> buildNode(element)
+        is DiagramElement.Edge -> buildEdge(element)
+        is DiagramElement.MermaidBlock -> buildMermaidBlock(element)
+        is DiagramElement.PdfElement -> buildPdfElement(element)
+        is DiagramElement.Text -> buildText(element)
+        is DiagramElement.Group -> buildGroup(element)
     }
 
     private fun buildStyle(el: Element, style: Style) {
@@ -105,21 +102,64 @@ object FdmlWriter {
         s.setAttribute("fillColor", style.fillColor)
         s.setAttribute("strokeColor", style.strokeColor)
         s.setAttribute("strokeWidth", style.strokeWidth.toString())
+        s.setAttribute("strokeDash", style.strokeDash)
         s.setAttribute("fontFamily", style.fontFamily)
         s.setAttribute("fontSize", style.fontSize.toString())
         s.setAttribute("fontColor", style.fontColor)
         s.setAttribute("opacity", style.opacity.toString())
         s.setAttribute("shapeType", style.shapeType)
+        s.setAttribute("cornerRadius", style.cornerRadius.toString())
+        s.setAttribute("rotation", style.rotation.toString())
+        if (style.linkUrl.isNotEmpty()) s.setAttribute("linkUrl", style.linkUrl)
+        if (style.tooltip.isNotEmpty()) s.setAttribute("tooltip", style.tooltip)
+
+        if (style.dropShadow.enabled) {
+            val ds = Element("shadow")
+            ds.setAttribute("offsetX", style.dropShadow.offsetX.toString())
+            ds.setAttribute("offsetY", style.dropShadow.offsetY.toString())
+            ds.setAttribute("radius", style.dropShadow.radius.toString())
+            ds.setAttribute("color", style.dropShadow.color)
+            ds.setAttribute("opacity", style.dropShadow.opacity.toString())
+            s.addContent(ds)
+        }
+
+        if (style.glow.enabled) {
+            val g = Element("glow")
+            g.setAttribute("radius", style.glow.radius.toString())
+            g.setAttribute("color", style.glow.color)
+            g.setAttribute("opacity", style.glow.opacity.toString())
+            s.addContent(g)
+        }
+
+        if (style.gradient.enabled) {
+            val g = Element("gradient")
+            g.setAttribute("type", style.gradient.type)
+            g.setAttribute("angle", style.gradient.angle.toString())
+            style.gradient.stops.forEach { stop ->
+                g.addContent(Element("stop").apply {
+                    setAttribute("offset", stop.offset.toString())
+                    setAttribute("color", stop.color)
+                })
+            }
+            s.addContent(g)
+        }
+
+        val deco = style.edgeDecoration
+        val ed = Element("edgeDecoration")
+        ed.setAttribute("sourceArrow", deco.sourceArrow.label)
+        ed.setAttribute("targetArrow", deco.targetArrow.label)
+        ed.setAttribute("dashPattern", deco.dashPattern.name.lowercase())
+        ed.setAttribute("curved", deco.curved.toString())
+        s.addContent(ed)
+
         el.addContent(s)
     }
 
     private fun buildNode(node: DiagramElement.Node): Element {
         val el = Element("node").apply {
-            setAttribute("id", node.id)
-            setAttribute("x", node.position.x.toString())
-            setAttribute("y", node.position.y.toString())
-            setAttribute("width", node.size.width.toString())
-            setAttribute("height", node.size.height.toString())
+            setAttribute("id", node.id); setAttribute("x", node.position.x.toString()); setAttribute("y", node.position.y.toString())
+            setAttribute("width", node.size.width.toString()); setAttribute("height", node.size.height.toString())
+            if (node.layerId != "default") setAttribute("layer", node.layerId)
         }
         buildStyle(el, node.style)
         el.addContent(Element("content").setText(node.content))
@@ -128,34 +168,24 @@ object FdmlWriter {
 
     private fun buildEdge(edge: DiagramElement.Edge): Element {
         val el = Element("edge").apply {
-            setAttribute("id", edge.id)
-            setAttribute("source", edge.sourceId)
-            setAttribute("target", edge.targetId)
-            setAttribute("type", edge.edgeType)
-            setAttribute("x", edge.position.x.toString())
-            setAttribute("y", edge.position.y.toString())
+            setAttribute("id", edge.id); setAttribute("source", edge.sourceId); setAttribute("target", edge.targetId)
+            setAttribute("type", edge.edgeType); setAttribute("x", edge.position.x.toString()); setAttribute("y", edge.position.y.toString())
+            if (edge.layerId != "default") setAttribute("layer", edge.layerId)
         }
         buildStyle(el, edge.style)
-        if (edge.label.isNotEmpty()) {
-            el.addContent(Element("label").setText(edge.label))
-        }
+        if (edge.label.isNotEmpty()) el.addContent(Element("label").setText(edge.label))
         edge.waypoints.forEach { wp ->
-            el.addContent(Element("waypoint").apply {
-                setAttribute("x", wp.position.x.toString())
-                setAttribute("y", wp.position.y.toString())
-            })
+            el.addContent(Element("waypoint").apply { setAttribute("x", wp.position.x.toString()); setAttribute("y", wp.position.y.toString()) })
         }
         return el
     }
 
     private fun buildMermaidBlock(block: DiagramElement.MermaidBlock): Element {
         val el = Element("mermaid").apply {
-            setAttribute("id", block.id)
-            setAttribute("x", block.position.x.toString())
-            setAttribute("y", block.position.y.toString())
-            setAttribute("width", block.width.toString())
-            setAttribute("height", block.height.toString())
+            setAttribute("id", block.id); setAttribute("x", block.position.x.toString()); setAttribute("y", block.position.y.toString())
+            setAttribute("width", block.width.toString()); setAttribute("height", block.height.toString())
             setAttribute("native", block.isNativeMermaid.toString())
+            if (block.layerId != "default") setAttribute("layer", block.layerId)
         }
         el.addContent(Element("code").addContent(CDATA(block.mermaidCode)))
         return el
@@ -163,12 +193,9 @@ object FdmlWriter {
 
     private fun buildPdfElement(pdf: DiagramElement.PdfElement): Element {
         val el = Element("pdf").apply {
-            setAttribute("id", pdf.id)
-            setAttribute("x", pdf.position.x.toString())
-            setAttribute("y", pdf.position.y.toString())
-            setAttribute("page", pdf.pageNumber.toString())
-            setAttribute("width", pdf.width.toString())
-            setAttribute("height", pdf.height.toString())
+            setAttribute("id", pdf.id); setAttribute("x", pdf.position.x.toString()); setAttribute("y", pdf.position.y.toString())
+            setAttribute("page", pdf.pageNumber.toString()); setAttribute("width", pdf.width.toString()); setAttribute("height", pdf.height.toString())
+            if (pdf.layerId != "default") setAttribute("layer", pdf.layerId)
             setText(Base64.getEncoder().encodeToString(pdf.pdfData))
         }
         return el
@@ -176,10 +203,9 @@ object FdmlWriter {
 
     private fun buildText(text: DiagramElement.Text): Element {
         val el = Element("text").apply {
-            setAttribute("id", text.id)
-            setAttribute("x", text.position.x.toString())
-            setAttribute("y", text.position.y.toString())
+            setAttribute("id", text.id); setAttribute("x", text.position.x.toString()); setAttribute("y", text.position.y.toString())
             setAttribute("fontSize", text.fontSize.toString())
+            if (text.layerId != "default") setAttribute("layer", text.layerId)
         }
         buildStyle(el, text.style)
         el.addContent(Element("content").setText(text.text))
@@ -188,14 +214,11 @@ object FdmlWriter {
 
     private fun buildGroup(group: DiagramElement.Group): Element {
         val el = Element("group").apply {
-            setAttribute("id", group.id)
-            setAttribute("x", group.position.x.toString())
-            setAttribute("y", group.position.y.toString())
+            setAttribute("id", group.id); setAttribute("x", group.position.x.toString()); setAttribute("y", group.position.y.toString())
+            if (group.layerId != "default") setAttribute("layer", group.layerId)
         }
         buildStyle(el, group.style)
-        group.elements.forEach { child ->
-            el.addContent(buildElement(child))
-        }
+        group.elements.forEach { el.addContent(buildElement(it)) }
         return el
     }
 }
