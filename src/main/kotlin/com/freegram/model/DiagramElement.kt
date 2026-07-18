@@ -4,7 +4,7 @@ data class Style(
     val fillColor: String = "#FFFFFF",
     val strokeColor: String = "#000000",
     val strokeWidth: Double = 1.0,
-    val fontFamily: String = "sans-serif",
+    val fontFamily: String = "Noto Sans CJK KR",
     val fontSize: Double = 14.0,
     val fontColor: String = "#000000",
     val opacity: Double = 1.0,

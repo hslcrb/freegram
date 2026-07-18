@@ -147,7 +147,7 @@ object FdmlReader {
             strokeColor = s.getAttributeValue("strokeColor") ?: "#000000",
             strokeWidth = s.getAttributeValue("strokeWidth")?.toDoubleOrNull() ?: 1.0,
             strokeDash = s.getAttributeValue("strokeDash") ?: "solid",
-            fontFamily = s.getAttributeValue("fontFamily") ?: "sans-serif",
+            fontFamily = s.getAttributeValue("fontFamily") ?: "Noto Sans CJK KR",
             fontSize = s.getAttributeValue("fontSize")?.toDoubleOrNull() ?: 14.0,
             fontColor = s.getAttributeValue("fontColor") ?: "#000000",
             opacity = s.getAttributeValue("opacity")?.toDoubleOrNull() ?: 1.0,
