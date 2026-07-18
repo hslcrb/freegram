@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fdml version="1.0" xmlns="https://freegram.dev/fdml/1.0">
+  <metadata>
+    <title>Example Flowchart</title>
+    <author>FreeGram User</author>
+    <description>A sample diagram showing FDML capabilities</description>
+    <created>2026-07-18T10:00:00</created>
+    <modified>2026-07-18T10:30:00</modified>
+    <backgroundColor>#FFFFFF</backgroundColor>
+    <mermaidCompatibility level="partial">
+      <incompatibleReason>Free-floating text elements lose position in Mermaid</incompatibleReason>
+      <incompatibleReason>PDF embedded elements have no Mermaid equivalent</incompatibleReason>
+    </mermaidCompatibility>
+  </metadata>
+  <resources>
+    <font id="f1" fontFamily="Noto Sans" fontWeight="normal" fontStyle="normal" mimeType="font/ttf">
+      AAEAAAA...base64-encoded-font-data...
+    </font>
+    <image id="img1" mimeType="image/png">
+      iVBORw0KGgo...base64-encoded-image-data...
+    </image>
+  </resources>
+  <diagram width="1200" height="900" gridSize="20">
+    <node id="n1" x="100" y="100" width="160" height="60">
+      <style fillColor="#4CAF50" strokeColor="#2E7D32" strokeWidth="2" fontFamily="sans-serif" fontSize="14" fontColor="#FFFFFF" opacity="1.0" shapeType="rectangle"/>
+      <content>Start</content>
+    </node>
+    <node id="n2" x="100" y="250" width="160" height="60">
+      <style fillColor="#2196F3" strokeColor="#1565C0" strokeWidth="2" fontFamily="sans-serif" fontSize="14" fontColor="#FFFFFF" opacity="1.0" shapeType="round-rect"/>
+      <content>Process</content>
+    </node>
+    <node id="n3" x="350" y="250" width="160" height="60">
+      <style fillColor="#FF9800" strokeColor="#E65100" strokeWidth="2" fontFamily="sans-serif" fontSize="14" fontColor="#FFFFFF" opacity="1.0" shapeType="diamond"/>
+      <content>Decision?</content>
+    </node>
+    <node id="n4" x="100" y="400" width="160" height="60">
+      <style fillColor="#F44336" strokeColor="#C62828" strokeWidth="2" fontFamily="sans-serif" fontSize="14" fontColor="#FFFFFF" opacity="1.0" shapeType="rectangle"/>
+      <content>End</content>
+    </node>
+    <edge id="e1" source="n1" target="n2" type="arrow" x="180" y="160">
+      <style strokeColor="#333333" strokeWidth="1.5" fontFamily="sans-serif" fontSize="10" fontColor="#333333" fillColor="#FFFFFF" opacity="1.0" shapeType="rectangle"/>
+      <label>next</label>
+      <waypoint x="180" y="160"/>
+    </edge>
+    <edge id="e2" source="n2" target="n3" type="arrow" x="260" y="280">
+      <style strokeColor="#333333" strokeWidth="1.5" fontFamily="sans-serif" fontSize="10" fontColor="#333333" fillColor="#FFFFFF" opacity="1.0" shapeType="rectangle"/>
+      <waypoint x="260" y="280"/>
+    </edge>
+    <edge id="e3" source="n3" target="n4" type="arrow" x="180" y="310">
+      <style strokeColor="#333333" strokeWidth="1.5" fontFamily="sans-serif" fontSize="10" fontColor="#333333" fillColor="#FFFFFF" opacity="1.0" shapeType="rectangle"/>
+      <label>Yes</label>
+      <waypoint x="260" y="310"/>
+      <waypoint x="180" y="310"/>
+    </edge>
+    <text id="t1" x="420" y="200" fontSize="12">
+      <style fillColor="#666666" strokeColor="#000000" strokeWidth="1" fontFamily="sans-serif" fontSize="12" fontColor="#666666" opacity="1.0" shapeType="rectangle"/>
+      <content>Note: this text has a fixed position</content>
+    </text>
+    <mermaid id="m1" x="500" y="100" width="500" height="350" native="true">
+      <code><![CDATA[graph TD
+    A[Start] --> B[Process]
+    B --> C{Decision}
+    C -->|Yes| D[End]
+    C -->|No| B]]></code>
+    </mermaid>
+    <group id="g1" x="600" y="500">
+      <style fillColor="#FFFFFF" strokeColor="#999999" strokeWidth="1" fontFamily="sans-serif" fontSize="14" fontColor="#000000" opacity="1.0" shapeType="rectangle"/>
+      <node id="gn1" x="620" y="520" width="120" height="50">
+        <style fillColor="#E8F5E9" strokeColor="#4CAF50" strokeWidth="1" fontFamily="sans-serif" fontSize="12" fontColor="#333333" opacity="1.0" shapeType="rectangle"/>
+        <content>Sub Node 1</content>
+      </node>
+      <node id="gn2" x="780" y="520" width="120" height="50">
+        <style fillColor="#E3F2FD" strokeColor="#2196F3" strokeWidth="1" fontFamily="sans-serif" fontSize="12" fontColor="#333333" opacity="1.0" shapeType="rectangle"/>
+        <content>Sub Node 2</content>
+      </node>
+      <edge id="ge1" source="gn1" target="gn2" type="arrow" x="740" y="545" style="...">
+        <label>connect</label>
+      </edge>
+    </group>
+    <!-- PDF element: embedded PDF embedded with position -->
+    <pdf id="p1" x="50" y="550" page="1" width="400" height="300">
+      JVBERi0xLjcN...base64-encoded-pdf-data...
+    </pdf>
+  </diagram>
+</fdml>
